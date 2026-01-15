@@ -4,6 +4,13 @@ const { generateToken } = require("../utils");
 const Roles = require("../enums/role.enum");
 
 const createUser = expressAsyncHandler(async (req, res) => {
+    // Check if user is admin
+    if (!req.user || req.user.role !== Roles.ADMIN) {
+        res.status(403).json({
+            message: 'Only admin can create users'
+        });
+        return;
+    }
     
     if (await User.findOne({ email: req.body.email?.toLowerCase().trim() })) {
         res.status(400).json({

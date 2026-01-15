@@ -49,23 +49,19 @@ exports.getAllClaims = expressAsyncHandler(async (req, res) => {
 
 exports.approveClaim = expressAsyncHandler(async (req, res) => {
   const contract = await getContract();
-  await contract.submitTransaction("ApproveClaim", req.params.id, '1');
+  const ress = await contract.submitTransaction("ApproveClaim", req.params.id, req.user.id);
+  console.log({ress})
   res.json({ message: "Claim approved" });
 });
 
 exports.rejectClaim = expressAsyncHandler(async (req, res) => {
   const contract = await getContract();
-  await contract.submitTransaction(
-    "RejectClaim",
-    req.params.id,
-    '1',
-    req.body.reason
-  );
+  await contract.submitTransaction("RejectClaim", req.params.id, req.user.id, req.body.reason);
   res.json({ message: "Claim rejected" });
 });
 
 exports.finalizeClaim = expressAsyncHandler(async (req, res) => {
   const contract = await getContract();
-  await contract.submitTransaction("FinalizeClaim", req.params.id, '1');
+  await contract.submitTransaction("FinalizeClaim", req.params.id, req.user.id);
   res.json({ message: "Claim finalized" });
 });

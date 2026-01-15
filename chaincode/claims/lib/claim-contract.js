@@ -58,13 +58,7 @@ class ClaimContract extends Contract {
     const claim = await this._getClaim(ctx, id);
     claim.status = ClaimStatus.REJECTED;
     claim.rejectionReason = reason;
-    this._addHistoryEntry(
-      ctx,
-      claim,
-      ClaimStatus.REJECTED,
-      userId,
-      "REJECTION"
-    );
+    this._addHistoryEntry(ctx, claim, ClaimStatus.REJECTED, userId);
     await this._save(ctx, claim);
   }
 
@@ -93,7 +87,7 @@ class ClaimContract extends Contract {
     }
   }
 
-  _addHistoryEntry(ctx, claim, action, userId, from) {
+  _addHistoryEntry(ctx, claim, action, userId) {
     if (!claim.history) {
       claim.history = [];
     }
@@ -106,9 +100,6 @@ class ClaimContract extends Contract {
       userId,
       createdAt: timestamp,
     };
-
-    if (from == "REJECTION")
-      historyEntry.rejectionReason = claim.rejectionReason;
 
     claim.history.push(historyEntry);
 

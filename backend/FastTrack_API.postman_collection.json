@@ -1,0 +1,289 @@
+{
+	"info": {
+		"_postman_id": "fasttrack-api-collection",
+		"name": "FastTrack API",
+		"description": "API collection for FastTrack Claims Management System",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.user && response.user.token) {",
+									"        pm.environment.set(\"authToken\", response.user.token);",
+									"        pm.environment.set(\"userId\", response.user._id);",
+									"        pm.environment.set(\"userRole\", response.user.role);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"hospital@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login with email and password. Returns JWT token."
+					},
+					"response": []
+				},
+				{
+					"name": "Register User (Admin Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"newuser@example.com\",\n    \"password\": \"password123\",\n    \"role\": \"hospital_user\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Create a new user account. Only admin can create users.\n\nRoles: hospital_user, insurer_reviewer, admin, auditor"
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints"
+		},
+		{
+			"name": "Claims",
+			"item": [
+				{
+					"name": "Submit Claim",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"patientId\": \"PAT123456\",\n    \"procedureCode\": \"70551\",\n    \"scanType\": \"MRI\",\n    \"bodyPart\": \"Head\",\n    \"dateOfService\": \"2025-01-15\",\n    \"referringPhysician\": \"Dr. Smith\",\n    \"performingFacility\": \"City Hospital\",\n    \"attachedDocumentation\": [\n        \"https://example.com/scans/image1.jpg\",\n        \"https://example.com/scans/image2.jpg\"\n    ],\n    \"billedAmount\": 1500.00,\n    \"diagnosisCodes\": [\n        \"G93.1\",\n        \"I63.9\"\n    ],\n    \"insuranceProvider\": \"Blue Cross\",\n    \"authorizationCode\": \"AUTH123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/claims",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"claims"
+							]
+						},
+						"description": "Submit a new claim. Requires hospital_user role.\n\nscanType: MRI or CT\n\ndateOfService: YYYY-MM-DD format"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Claim",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/claims/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"claims",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "CLAIM-1700000000000-4821",
+									"description": "Claim ID"
+								}
+							]
+						},
+						"description": "Get claim details by ID. Requires hospital_user, admin, or auditor role."
+					},
+					"response": []
+				},
+				{
+					"name": "Approve Claim",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/claims/:id/approve",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"claims",
+								":id",
+								"approve"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "CLAIM-1700000000000-4821",
+									"description": "Claim ID"
+								}
+							]
+						},
+						"description": "Approve a claim. Requires insurer_reviewer role."
+					},
+					"response": []
+				},
+				{
+					"name": "Reject Claim",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reason\": \"Insufficient documentation provided\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/claims/:id/reject",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"claims",
+								":id",
+								"reject"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "CLAIM-1700000000000-4821",
+									"description": "Claim ID"
+								}
+							]
+						},
+						"description": "Reject a claim with a reason. Requires insurer_reviewer role."
+					},
+					"response": []
+				},
+				{
+					"name": "Finalize Claim",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/claims/:id/finalize",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"claims",
+								":id",
+								"finalize"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "CLAIM-1700000000000-4821",
+									"description": "Claim ID"
+								}
+							]
+						},
+						"description": "Finalize a claim. Requires admin role."
+					},
+					"response": []
+				}
+			],
+			"description": "Claims management endpoints"
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userRole",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+
